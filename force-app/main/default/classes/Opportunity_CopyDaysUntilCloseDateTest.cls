@@ -38,6 +38,19 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
         }
         insert opportunitiesList;
 
+        // Submit opportunities for approval
+        List<Approval.ProcessSubmitRequest> allReqs1 = new List<Approval.ProcessSubmitRequest>();
+        for (Opportunity oppty : opportunitiesList) {
+            Approval.ProcessSubmitRequest req1 = new Approval.ProcessSubmitRequest();
+            req1.setProcessDefinitionNameOrId('Discount_Approval_Process');
+            req1.setComments('Discount approval needed.');
+            req1.setNextApproverIds(new Id[] {UserInfo.getUserId()});
+            req1.setObjectId(oppty.Id);
+            allReqs1.add(req1);
+        }
+        Approval.ProcessResult[] submits = Approval.process(allReqs1);
+
+        // Approve opportunities
         Set<Id> oppIds = new Map<Id, Opportunity>([SELECT Id 
                                                      FROM Opportunity]).keySet();
         Set<Id> pIds = new Map<Id, ProcessInstance>([SELECT Id, Status, TargetObjectId 
@@ -49,16 +62,16 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
                                                                       FROM ProcessInstanceWorkItem 
                                                                      WHERE ProcessInstanceId 
                                                                         IN :pIds]).keySet();
-        List<Approval.ProcessWorkitemRequest> allReqs = new List<Approval.ProcessWorkitemRequest>();
+        List<Approval.ProcessWorkitemRequest> allReqs2 = new List<Approval.ProcessWorkitemRequest>();
         for (Id pInsWkItem : pInsWkItems) {
-            Approval.ProcessWorkitemRequest req = new Approval.ProcessWorkitemRequest();
-            req.setComments('Discount approval needed.');
-            req.setAction('Approve');
-            req.setNextApproverIds(new Id[] {UserInfo.getUserId()});
-            req.setWorkitemId(pInsWkItem);
-            allReqs.add(req);
+            Approval.ProcessWorkitemRequest req2 = new Approval.ProcessWorkitemRequest();
+            req2.setComments('Discount approval needed.');
+            req2.setAction('Approve');
+            req2.setNextApproverIds(new Id[] {UserInfo.getUserId()});
+            req2.setWorkitemId(pInsWkItem);
+            allReqs2.add(req2);
         }
-        Approval.ProcessResult[] results = Approval.process(allReqs);
+        Approval.ProcessResult[] results = Approval.process(allReqs2);
     }
 
     // Run the batch job against the new opportunities
@@ -73,6 +86,9 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
                                            FROM Opportunity];
         for (Opportunity updatedOpp : updatedOpps) {
             System.assertEquals(updatedOpp.Days_Until_Close_Date__c, updatedOpp.DaysUntilCloseDateCopy__c);
+            System.assertEquals('Approved', updatedOpp.Discount_Approval_Status__c);
+            System.debug('DaysUntilCloseDateCopy = ' + updatedOpp.DaysUntilCloseDateCopy__c);
+            System.debug('Discount approval status = ' + updatedOpp.Discount_Approval_Status__c);
         }
                                            
     }
