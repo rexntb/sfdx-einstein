@@ -6,8 +6,8 @@ global class Opportunity_CopyDaysUntilCloseDate implements Database.Batchable<SO
     
     // Find all open opportunities.
     global Database.QueryLocator start(Database.BatchableContext BC) {
-        return Database.getQueryLocator('SELECT Id, Days_Until_Close_Date__c, DaysUntilCloseDateCopy__c'
-                                       + ' FROM Opportunity');
+        return Database.getQueryLocator('SELECT Id, Days_Until_Close_Date__c, DaysUntilCloseDateCopy__c '
+                                      + 'FROM Opportunity');
     }
 
     // Update all opportunities found.
