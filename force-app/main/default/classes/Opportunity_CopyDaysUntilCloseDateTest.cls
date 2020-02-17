@@ -24,7 +24,8 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
 
     // Create opportunities with discounts 25% and higher and approve them
     @TestSetup
-    static void createAndApproveOpportunities() {
+    private static void createAndApproveOpportunities() {
+        System.debug('Setup method has started running.');
         List<Opportunity> opportunitiesList = new List<Opportunity>();
         // Insert 100 opportunities
         for (Integer i = 0; i < 100; i++) {
@@ -39,8 +40,13 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
         insert opportunitiesList;
 
         // Submit opportunities for approval
+        submitOpportunitiesforApproval(opportunitiesList);
+    }
+
+    // Submit the opportunities for approval
+    private static void submitOpportunitiesforApproval(List<Opportunity> oppsToSubmit) {
         List<Approval.ProcessSubmitRequest> allReqs1 = new List<Approval.ProcessSubmitRequest>();
-        for (Opportunity oppty : opportunitiesList) {
+        for (Opportunity oppty : oppsToSubmit) {
             Approval.ProcessSubmitRequest req1 = new Approval.ProcessSubmitRequest();
             req1.setProcessDefinitionNameOrId('Discount_Approval_Process');
             req1.setComments('Discount approval needed.');
@@ -51,6 +57,11 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
         Approval.ProcessResult[] submits = Approval.process(allReqs1);
 
         // Approve opportunities
+        approveOpportunities();
+    }
+
+    // Approve the new opportunities
+    private static void approveOpportunities() {
         Set<Id> oppIds = new Map<Id, Opportunity>([SELECT Id 
                                                      FROM Opportunity]).keySet();
         Set<Id> pIds = new Map<Id, ProcessInstance>([SELECT Id, Status, TargetObjectId 
@@ -76,7 +87,7 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
 
     // Run the batch job against the new opportunities
     @isTest
-    static void batchJobTest() {
+    private static void batchJobTest() {
         Test.startTest();
         Opportunity_CopyDaysUntilCloseDate job = new Opportunity_CopyDaysUntilCloseDate();
         Id jobId = Database.executeBatch(job);
@@ -87,9 +98,6 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
         for (Opportunity updatedOpp : updatedOpps) {
             System.assertEquals(updatedOpp.Days_Until_Close_Date__c, updatedOpp.DaysUntilCloseDateCopy__c);
             System.assertEquals('Approved', updatedOpp.Discount_Approval_Status__c);
-            System.debug('DaysUntilCloseDateCopy = ' + updatedOpp.DaysUntilCloseDateCopy__c);
-            System.debug('Discount approval status = ' + updatedOpp.Discount_Approval_Status__c);
-        }
-                                           
+        }                            
     }
 }
