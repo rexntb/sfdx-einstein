@@ -25,7 +25,6 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
     // Create opportunities with discounts 25% and higher and approve them
     @TestSetup
     private static void createAndApproveOpportunities() {
-        System.debug('Setup method has started running.');
         List<Opportunity> opportunitiesList = new List<Opportunity>();
         // Insert 100 opportunities
         for (Integer i = 0; i < 100; i++) {
@@ -41,6 +40,8 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
 
         // Submit opportunities for approval
         submitOpportunitiesforApproval(opportunitiesList);
+        // Approve opportunities
+        approveOpportunities();
     }
 
     // Submit the opportunities for approval
@@ -55,9 +56,6 @@ private class Opportunity_CopyDaysUntilCloseDateTest {
             allReqs1.add(req1);
         }
         Approval.ProcessResult[] submits = Approval.process(allReqs1);
-
-        // Approve opportunities
-        approveOpportunities();
     }
 
     // Approve the new opportunities
